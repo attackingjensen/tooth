@@ -1,0 +1,5 @@
+private/
+.deps/
+bin/
+__pycache__/
+*.log

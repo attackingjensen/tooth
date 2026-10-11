@@ -1,0 +1,10 @@
+env.local
+__pycache__/
+*.py[cod]
+.pytest_cache/
+app/web_demo/private/
+production_cases/
+*.log
+*.pt
+*.pth
+*.safetensors

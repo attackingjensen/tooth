@@ -1,0 +1,20 @@
+{
+  "name": "SurfaceCrownNet",
+  "checkpoint": "models/c80/c80_epoch80.pt",
+  "epoch": 80,
+  "input": "binary jaw occupancy [B,1,D,H,W]=ZYX; permanent tooth FDI",
+  "output": "surface logits >=0 \u2192 integer XYZ support; material TSDF head unused",
+  "config": {
+    "jaw_channels": 1,
+    "template_channels": 1,
+    "channels": [
+      32,
+      64,
+      128
+    ],
+    "stages": 3,
+    "blocks": 2,
+    "mode": "regression",
+    "checkpointing": true
+  }
+}
