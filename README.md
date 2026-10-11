@@ -1,6 +1,6 @@
-# C80 → TRELLIS crown generation (20261009)
+# C80 → TRELLIS crown generation (20261011)
 
-C80 SurfaceCrownNet epoch80 armC → TRELLIS SLAT ControlNet raw55k → mesh decoder.
+C80 SurfaceCrownNet v3 old-only step12320 → TRELLIS SLAT ControlNet raw55k → mesh decoder.
 Research prototype; package integrity does not establish clinical quality.
 
 ## Package layout
@@ -23,7 +23,7 @@ The C80 and SLAT checkpoint hashes are recorded in `release_manifest.json`. Thir
 
 ## Released checkpoints and external dependencies
 
-- Stage 1: `models/c80/c80_epoch80.pt` (C80 epoch80 armC).
+- Stage 1: `models/c80/c80_v3_step12320.pt` (C80 v3 old-only step12320).
 - Stage 2: `app/runs/crown_slat_full/ckpts/denoiser_step0055000.pt` (SLAT ControlNet raw55k).
 
 Only these two custom checkpoints are uploaded. Before inference obtain the following upstream weights and place them at exactly these paths:
@@ -36,3 +36,15 @@ The TRELLIS JSON configs remain included. File verification checks published fil
 
 Code: https://github.com/attackingjensen/tooth
 Checkpoints: https://huggingface.co/zhaxie/tooth
+
+## 2026-10-11 update
+
+C80 is now v3 old-only step12320, trained with full0.7 baseline, scale jitter and center offsets. SLAT baseline raw55k is unchanged.
+
+The default crop recipe is `v3_aligned`: explicitly supply the estimated crown bounding-box center and longest edge d; cube side L=d/0.7. Input axes must already follow the training convention. The default does not apply PCA rotation or normal-based center displacement. The web UI requires the diameter and allows center correction. Re-estimate and preview old tasks; old full0.9 saved candidates are expanded by 9/7. This is not automatic FDI tooth localization. Stage 2 retains its original full0.9 training recipe.
+
+```bash
+python app/prepare_jaw_frame.py --jaw aligned.stl --center X Y Z --diameter 9 --out_dir prepared
+```
+
+See `WEIGHT_UPDATE.json` for checkpoint provenance and `VALIDATION.md` for the latest package validation scope. Historical deployment instructions refer to fixtures not included in this public release.

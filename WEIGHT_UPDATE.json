@@ -1,0 +1,14 @@
+{
+  "stage1_source": "/root/c80_upgrade_runtime_20261009/formal_coarse_v3_old_only_seed43/resume_slot0.pt",
+  "stage1_source_sha256": "858034779b9288c3ea12808c3da25ac05821eb50d53a970d6dd91272636ee51a",
+  "stage1_step": 12320,
+  "stage1_export_sha256": "b2dcba0c9466377d964724a726fb1b67072b5158accb0d05b785debffbbfa376",
+  "export": "inference-only checkpoint; all model tensors exactly equal to source",
+  "stage2_source": "/public/model_group/z84378256/workspace/dzx/crown_diffusion/crown_diffusion/crown_trellis/runs/crown_slat_full/ckpts/denoiser_step0055000.pt",
+  "stage2_sha256": "cb9f9429ea30c3baa5884eeebec6e7fe131fdb8f45b14aa2082ffaad1f97594b",
+  "stage2_note": "baseline raw55k already identical in previous delivery",
+  "validation": "strict CPU load, tensor equality, two real jaw finite nonempty support; no new GPU cascade evaluation",
+  "stage2_training_fill": 0.9,
+  "crop_fill": 0.7,
+  "crop_fix": "2026-10-11: UI, manual metadata, saved candidates full0.7; frame tests 6 passed"
+}

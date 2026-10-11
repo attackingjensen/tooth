@@ -38,6 +38,9 @@ def to_world(vertices, frame):
 
 
 def estimate(mesh, anchor, anchor_normal=None, neighbors=None, diameter=None, basis='occlusal'):
+    if basis == 'v3_aligned':
+        if diameter is None:raise ValueError('v3定框需要填写预计牙冠最长边，并将点选中心校正为预计牙冠bbox中心；输入须已按训练方向对齐')
+        return v3_frame(anchor, diameter)
     anchor = vector(anchor, '基牙选点')
     centers = mesh.triangles_center
     distances = np.linalg.norm(centers-anchor, axis=1)
@@ -104,3 +107,20 @@ def estimate(mesh, anchor, anchor_normal=None, neighbors=None, diameter=None, ba
             'center_offset_from_anchor_mm': -offset, 'warnings': warnings, 'gt_used': False,
             'normalization': 'x_model = R.T @ (x_world-c) / L; L=d/0.7',
             'localization': 'Explicit user abutment anchor; local surface/optional neighbor estimates, manual confirmation required'}
+
+
+def v3_frame(center, diameter, rotation=None):
+    # 2026-10-11：v3 identity部署配方；显式中心/最长边/已对齐方向，不使用PCA和法向位移。
+    center=vector(center, '预计牙冠中心')
+    diameter=float(diameter)
+    if not np.isfinite(diameter) or not 3 <= diameter <= 25:raise ValueError('预计牙冠最长边应在3–25mm')
+    frame={'version':2,'center_world':center.tolist(),'cube_side_world':diameter/.7,
+           'rotation_model_to_world':np.eye(3).tolist() if rotation is None else np.asarray(rotation).tolist(),
+           'estimated_crown_longest_edge_mm':diameter,'fill':.7,'basis':'v3_aligned',
+           'anchor_world':center.tolist(),'anchor_normal_world':None,'neighbor_points_world':[],
+           'center_offset_from_anchor_mm':0.,'gt_used':False,'crop_recipe':'v3_identity_explicit_frame',
+           'normalization':'x_model = R.T @ (x_world-c) / L; L=d/0.7',
+           'warnings':['输入必须已按训练坐标方向对齐；中心和最长边由用户确认，不能由jaw bbox代替牙冠bbox'],
+           'localization':'Explicit estimated crown bbox center; no PCA or normal-based center shift'}
+    parameters(frame)
+    return frame

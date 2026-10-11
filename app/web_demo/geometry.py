@@ -66,9 +66,11 @@ def prepare(mesh,center,mode,length,anchor_normal=None,aligned_frame=None):
                     'localization':'User-selected point on jaw; no automatic abutment detection',
                     'crop_rule':('Oriented cube using shared inference frame' if mode=='cube' else 'Longitudinal clipping or full jaw; inspect boundaries in preview')}
     if aligned_frame is not None:
+        if not np.isclose(float(aligned_frame.get('fill', .7)), .7):raise ValueError('旧0.9框请重新估计为full0.7并预览')
         if mode!='cube':raise ValueError('局部对齐请使用定向立方体模式')
         frame.update(aligned_frame,center_world=center.tolist(),cube_side_world=side,mode=mode,length=length,
-                     estimated_crown_longest_edge_mm=side*.9,
+                     estimated_crown_longest_edge_mm=side*.7, fill=.7,
+                     normalization="x_model = R.T @ (x_world-c) / L; L=d/0.7",
                      crop_faces=len(cropped.faces),input_faces=len(mesh.faces))
     if np.max(np.abs(to_model(cropped.vertices,frame)))>.50001:
         raise ValueError('裁剪结果越出归一化框，请重新预览')

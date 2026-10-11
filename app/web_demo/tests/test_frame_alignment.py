@@ -19,7 +19,7 @@ def test_rotated_crop_and_inverse_export():
     crop,saved=prepare(mesh,frame['center_world'],'cube',6,aligned_frame=frame)
     normalized=to_model(crop.vertices,saved)
     assert np.max(np.abs(normalized))<=.500001
-    assert np.isclose(saved['cube_side_world'],saved['estimated_crown_longest_edge_mm']/.9)
+    assert np.isclose(saved['cube_side_world'],saved['estimated_crown_longest_edge_mm']/.7)
     assert np.allclose(normalized.max(0)-normalized.min(0),[4/6,1,1])
     assert np.allclose(to_world(normalized,saved),crop.vertices)
     # 模拟一阶段及二阶段顶点，两者用相同的反变换。
@@ -44,3 +44,27 @@ def test_rigid_frame_estimate_equivariance():
     assert np.allclose(np.array(f['center_world'])@r.T+shift,g['center_world'])
     assert np.isclose(abs(np.array(g['rotation_model_to_world'])[:,1]@(r@np.array(f['rotation_model_to_world'])[:,1])),1.)
     assert not f['gt_used'] and len(f['neighbor_points_world'])==2
+
+
+def test_full07_frame_matches_physical_crown_extent():
+    mesh=trimesh.creation.icosphere(subdivisions=3,radius=5)
+    f=estimate(mesh,[0,0,5],[0,0,1],diameter=9)
+    assert f['fill']==.7
+    assert np.isclose(f['cube_side_world'],9/.7)
+    _,saved=prepare(mesh,f['center_world'],'cube',f['cube_side_world'],aligned_frame=f)
+    assert saved['fill']==.7
+    assert np.isclose(saved['estimated_crown_longest_edge_mm'],9)
+    crown=np.array([[-4.5,0,0],[4.5,0,0]])@np.array(saved['rotation_model_to_world']).T+saved['center_world']
+    assert np.isclose(np.ptp(to_model(crown,saved)[:,0]),.7)
+    with pytest.raises(ValueError,match='0.9'):
+        prepare(mesh,f['center_world'],'cube',10,aligned_frame=dict(f,fill=.9))
+
+
+def test_v3_explicit_frame_has_no_heuristic_shift_or_rotation():
+    from frame_alignment import v3_frame
+    f=v3_frame([2,3,4],9)
+    assert f['center_world']==[2,3,4]
+    assert np.array_equal(f['rotation_model_to_world'],np.eye(3))
+    assert np.isclose(f['cube_side_world'],9/.7)
+    assert f['center_offset_from_anchor_mm']==0
+    assert f['crop_recipe']=='v3_identity_explicit_frame'

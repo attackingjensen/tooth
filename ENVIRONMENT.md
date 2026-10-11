@@ -26,7 +26,7 @@ python3.10 -m venv /opt/crown-voxel
 /opt/crown-runtime/bin/python -m pip install --no-build-isolation ./third_party/nvdiffrast ./third_party/utils3d
 /opt/crown-voxel/bin/python -m pip install -r environment/requirements-voxel.txt
 ```
-安装需要可访问软件包源；本次只发布两个自训练权重；推理前须另行准备 DINOv2、TRELLIS SLAT encoder 和 mesh decoder 权重。若更换 PyTorch/CUDA/GPU 架构，CUDA 扩展需重新编译并验收。
+安装需要可访问软件包源；本次仅发布两个自训练权重，运行前需另行准备三个上游基础权重。若更换 PyTorch/CUDA/GPU 架构，CUDA 扩展需重新编译并验收。
 完整旧环境快照 environment/*freeze-reference.txt 仅供排查，含旧路径与不相关软件，不应直接整体 pip install。
 
 ## 网络

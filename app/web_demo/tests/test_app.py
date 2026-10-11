@@ -105,3 +105,22 @@ def test_saved_candidate_requires_exact_scan_hash(tmp_path,monkeypatch):
     assert server.saved_candidate(source)['case']=='case1'
     source.write_bytes(b'different scan with same filename')
     assert server.saved_candidate(source) is None
+
+
+def test_direct_generation_requires_fdi_and_preserves_input_bbox():
+    c,h=client();jid=upload(c,h);url='/api/jobs/'+jid
+    assert c.post(url+'/direct-run',json={'fdi':0},headers=h).status_code==400
+    response=c.post(url+'/direct-run',json={'fdi':37},headers=h)
+    assert response.status_code==202
+    frame=json.loads((server.JOBS/jid/'frame.json').read_text())
+    assert frame['crop_recipe']=='direct_local_input_bbox'
+    assert frame['fill'] is None
+    assert np.isclose(frame['cube_side_world'],8/.95)
+    assert c.post(url+'/direct-run',json={'fdi':37},headers=h).status_code==409
+
+
+def test_point_frame_uses_fdi_size_without_manual_diameter():
+    c,h=client();jid=upload(c,h)
+    response=c.post('/api/jobs/'+jid+'/estimate-frame',json={'fdi':37,'anchor':[0,0,0],'basis':'v3_aligned'},headers=h)
+    assert response.status_code==200
+    assert np.isclose(response.json['frame']['cube_side_world'],10.5/.7)

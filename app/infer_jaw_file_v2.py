@@ -55,9 +55,9 @@ def main():
     jvn=to_model(jaw.vertices,frame);jf=np.asarray(jaw.faces)
     assert np.isfinite(jvn).all() and np.max(np.abs(jvn))<=.50001
     ckpts=ROOT.parent/'models/TRELLIS-image-large/ckpts'
-    ssck=ROOT.parent/'models/c80/c80_epoch80.pt'
+    ssck=ROOT.parent/'models/c80/c80_v3_step12320.pt'
     slck=ROOT/'runs/crown_slat_full/ckpts/denoiser_step0055000.pt'
-    meta={'input':str(args.jaw.resolve()),'input_sha256':hashlib.sha256(args.jaw.read_bytes()).hexdigest(),'frame':frame,'gt_used':bool(frame.get('gt_used',False)),'seed':args.seed,'stage1_architecture':'SurfaceCrownNet C80','fdi':args.fdi,'stage1_deterministic':True,'surface_threshold':0.,'c80_input_layout':'ZYX/DHW','trellis_coords_layout':'XYZ','material_tsdf_head_used':False,'slat_steps':args.slat_steps,'c80_checkpoint':str(ssck),'c80_checkpoint_sha256':hashlib.sha256(ssck.read_bytes()).hexdigest(),'slat_checkpoint':str(slck),'num_views':40,'render_res':512,'cfg_strength':0.,'taubin':{'lambda':.5,'nu':.53,'iterations':80},'condition_bridge':'normalize native jaw features then exact coordinate overlap; zero elsewhere','note':'C80 epoch80 armC surface logits + SLAT55raw; shared input frame; GT support not used.'}
+    meta={'input':str(args.jaw.resolve()),'input_sha256':hashlib.sha256(args.jaw.read_bytes()).hexdigest(),'frame':frame,'gt_used':bool(frame.get('gt_used',False)),'seed':args.seed,'stage1_architecture':'SurfaceCrownNet C80','fdi':args.fdi,'stage1_deterministic':True,'surface_threshold':0.,'c80_input_layout':'ZYX/DHW','trellis_coords_layout':'XYZ','material_tsdf_head_used':False,'slat_steps':args.slat_steps,'c80_checkpoint':str(ssck),'c80_checkpoint_sha256':hashlib.sha256(ssck.read_bytes()).hexdigest(),'slat_checkpoint':str(slck),'num_views':40,'render_res':512,'cfg_strength':0.,'taubin':{'lambda':.5,'nu':.53,'iterations':80},'condition_bridge':'normalize native jaw features then exact coordinate overlap; zero elsewhere','note':'C80 v3 old-only step12320 surface logits + SLAT55raw; shared input frame; GT support not used.'}
     (out/'run_metadata.json').write_text(json.dumps(meta,indent=2))
     sampler=FlowEulerCfgSampler(sigma_min=1e-5)
     zero=torch.zeros(1,1,1024,device='cuda')

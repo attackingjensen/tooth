@@ -4,7 +4,7 @@ import numpy as np
 import torch
 from c80_models import SurfaceCrownNet
 
-DEFAULT_CHECKPOINT=Path(__file__).resolve().parents[1]/'models/c80/c80_epoch80.pt'
+DEFAULT_CHECKPOINT=Path(__file__).resolve().parents[1]/'models/c80/c80_v3_step12320.pt'
 
 def valid_fdi(value):
     if isinstance(value, bool) or not isinstance(value, (int, np.integer)) or not (1 <= value//10 <= 4 and 1 <= value%10 <= 8):
@@ -13,8 +13,8 @@ def valid_fdi(value):
 
 def load_c80(checkpoint=DEFAULT_CHECKPOINT, device='cuda'):
     saved=torch.load(checkpoint,map_location='cpu',weights_only=True)
-    if saved.get('epoch') != 80 or saved.get('arm') != 'C':
-        raise ValueError('C80 checkpoint must be selected epoch80 armC')
+    if saved.get('step') != 12320 or saved.get('architecture') != 'c80':
+        raise ValueError('C80 checkpoint must be v3 step12320')
     model=SurfaceCrownNet(**saved['config']).float().to(device).eval()
     model.load_state_dict(saved['model'],strict=True)
     return model

@@ -1,6 +1,6 @@
 # C80 接 TRELLIS
 
-一阶段权重`models/c80/c80_epoch80.pt`原样来自`native_surface_full_BC50_20261007/formal/C/best.pt`，epoch80、armC。代码在`app/c80_models/`；严格使用checkpoint内config实例化，strict=True加载。32/64/128三尺度主干、3个交换stage、每stage 2个残差block；jaw/template条件编码和FDI embedding。推理不给template，mask=0。回归TSDF头保留于权重/架构但不用于support，实际使用surface_head的logits≥0。没有SS扩散过程，没有SS噪声和SS预训练codec依赖。
+一阶段权重`models/c80/c80_v3 step12320.pt`原样来自`native_surface_full_BC50_20261007/formal/C/best.pt`，v3 step12320、armC。代码在`app/c80_models/`；严格使用checkpoint内config实例化，strict=True加载。32/64/128三尺度主干、3个交换stage、每stage 2个残差block；jaw/template条件编码和FDI embedding。推理不给template，mask=0。回归TSDF头保留于权重/架构但不用于support，实际使用surface_head的logits≥0。没有SS扩散过程，没有SS噪声和SS预训练codec依赖。
 
 ## 共享坐标
 

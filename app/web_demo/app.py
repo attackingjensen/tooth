@@ -6,7 +6,7 @@ import numpy as np
 from flask import Flask,request,session,jsonify,render_template,send_file,abort
 from werkzeug.exceptions import HTTPException
 from geometry import load_mesh,prepare
-from frame_alignment import estimate,parameters
+from frame_alignment import estimate,parameters,v3_frame
 from c80_runtime import valid_fdi
 
 BASE=Path(__file__).resolve().parent
@@ -148,17 +148,43 @@ def estimate_frame(jid):
         if d['status'] in {'queued','running'}:return jsonify(error='任务正在运行'),409
         body=request.get_json() or {}
         mesh=load_mesh(JOBS/jid/'input.stl')
-        frame=estimate(mesh,body.get('anchor'),body.get('anchor_normal'),body.get('neighbors'),
-                       body.get('diameter'),body.get('basis','occlusal'))
+        basis=body.get('basis','v3_aligned')
+        if basis=='v3_aligned':
+            fdi=valid_fdi(body.get('fdi'))
+            diameter=body.get('diameter') or (10.5 if fdi%10 in (6,7,8) else 8.5 if fdi%10 in (4,5) else 8.)
+            frame=v3_frame(body.get('anchor'),diameter)
+            frame['localization']='User-selected center with FDI size initial estimate; manual correction optional'
+        else:
+            frame=estimate(mesh,body.get('anchor'),body.get('anchor_normal'),body.get('neighbors'),body.get('diameter'),basis)
         # 估计不覆盖已保存裁剪，必须随后显式预览生成新revision。
     return jsonify(frame=frame)
+
+@app.post('/api/jobs/<jid>/direct-run')
+def direct_run(jid):
+    with LOCK:
+        d=state(jid)
+        if d['status'] in {'queued','running'}:return jsonify(error='任务正在运行'),409
+        fdi=valid_fdi((request.get_json() or {}).get('fdi'))
+        if Q.full():return jsonify(error='队列已满，请稍后重试'),429
+        mesh=load_mesh(JOBS/jid/'input.stl')
+        side=float(mesh.extents.max()/.95)
+        frame={'version':2,'center_world':mesh.bounds.mean(0).tolist(),'cube_side_world':side,
+               'rotation_model_to_world':np.eye(3).tolist(),'gt_used':False,'mode':'cube','length':side,
+               'basis':'input_bbox','crop_recipe':'direct_local_input_bbox','input_extent_fill':.95,
+               'fill':None,'normalization':'(v_world-center_world)/cube_side_world',
+               'localization':'Whole local input bbox; target crown center/size/alignment not inferred'}
+        mesh.export(JOBS/jid/'prepared.stl');(JOBS/jid/'frame.json').write_text(json.dumps(frame,indent=2))
+        d.update(fdi=fdi,frame=frame,center=frame['center_world'],architecture='C80 v3 + TRELLIS raw55k',
+                 status='queued',message='直接生成已排队',revision=secrets.token_hex(6),queued_at=time.time())
+        d.pop('downloads',None);d.pop('error',None);write(jid,d);Q.put_nowait(jid)
+    return jsonify(public(d)),202
 
 @app.post('/api/jobs/<jid>/run')
 def run(jid):
     with LOCK:
         d=state(jid)
         if d['status']!='prepared':return jsonify(error='请先完成裁剪预览'),409
-        if (d.get('frame') or {}).get('version')!=2:return jsonify(error='旧定框需要重新估计和预览'),409
+        if (d.get('frame') or {}).get('version')!=2 or (d.get('frame') or {}).get('fill')!=.7:return jsonify(error='旧定框需要重新估计和预览'),409
         fdi=valid_fdi((request.get_json() or {}).get('fdi'))
         if Q.full():return jsonify(error='队列已满，请稍后重试'),429
         d.update(fdi=fdi,architecture='C80 + TRELLIS raw55k',status='queued',message='已排队，等待推理资源',revision=secrets.token_hex(6),queued_at=time.time());write(jid,d);Q.put_nowait(jid)
